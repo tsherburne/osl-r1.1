@@ -1,0 +1,56 @@
+<?xml version='1.0' encoding='UTF-8'?><magicdraw><opaquebehavior id="_2024x_131803cf_1720009335247_920288_2255" refElementId="_2024x_131803cf_1720009335247_920288_2255" humanType="Opaque Behavior" classType="OpaqueBehavior" requireSort="node" icon="index_files/icon_opaquebehavior_1124763225.jpg"><visibility humanName="Visibility">public</visibility><qualifiedName humanName="Qualified Name" mode="e">Mission::Mission Simulation::Fetch Distributions</qualifiedName><package refid="_2024x_131803cf_1719578788953_11802_390" refElementId="_2024x_131803cf_1719578788953_11802_390" humanType="Package" classType="Package" name="Mission Simulation" hasDiagram="true" icon="index_files/icon_package_1963532908.jpg" humanName="Package"/><owningPackage refid="_2024x_131803cf_1719578788953_11802_390" refElementId="_2024x_131803cf_1719578788953_11802_390" humanType="Package" classType="Package" name="Mission Simulation" hasDiagram="true" icon="index_files/icon_package_1963532908.jpg" humanName="Owning Package"/><owner refid="_2024x_131803cf_1719578788953_11802_390" refElementId="_2024x_131803cf_1719578788953_11802_390" humanType="Package" classType="Package" name="Mission Simulation" hasDiagram="true" icon="index_files/icon_package_1963532908.jpg" humanName="Owner" mode="s,e"/><namespace refid="_2024x_131803cf_1719578788953_11802_390" refElementId="_2024x_131803cf_1719578788953_11802_390" humanType="Package" classType="Package" name="Mission Simulation" hasDiagram="true" icon="index_files/icon_package_1963532908.jpg" humanName="Namespace"/><name humanName="Name" mode="s,e">Fetch Distributions</name><language humanName="Language" mode="e"><String>Groovy</String></language><isReentrant humanName="Is Reentrant" mode="s,e">true</isReentrant><isLeaf humanName="Is Leaf">false</isLeaf><isFinalSpecialization humanName="Is Final Specialization">false</isFinalSpecialization><isActive humanName="Is Active">false</isActive><isAbstract humanName="Is Abstract">false</isAbstract><effectiveIRI humanName="Effective IRI"></effectiveIRI><documentation humanName="Documentation"></documentation><derivedExplanation humanName="Derived Explanation"></derivedExplanation><body humanName="Body" mode="e"><String>import com.nomagic.magicdraw.core.Application;
+import com.nomagic.magicdraw.openapi.uml.SessionManager;
+import com.nomagic.magicdraw.uml.Finder; 
+import com.nomagic.uml2.ext.jmi.helpers.TagsHelper;
+import com.nomagic.uml2.ext.jmi.helpers.StereotypesHelper; 
+import com.google.gson.Gson;
+
+class Distribution {
+  float max;
+  float min;
+  float peak;
+}
+
+url = new URL('https://kv-store.osp.stede.cc/terrainRate');
+connection = url.openConnection();
+connection.setRequestMethod('GET');
+connection.setRequestProperty('CF-Access-Client-Id', '05a873aee4cb153cc381a488bb8f53a0.access');
+connection.setRequestProperty('CF-Access-Client-Secret', '6b79ff72354a3141c2b997ee0b7c438222a6e2f7a887c0e65ff98e31b424e582');
+connection.setRequestProperty('Content-Type', 'application/json');
+connection.connect();
+
+sb = new StringBuffer();
+if (connection.responseCode == 200) {
+  br = new BufferedReader(new InputStreamReader(connection.getContent(), "utf8")); 
+  while ((line = br.readLine()) != null) {
+    sb.append(line);
+  }
+}
+else {
+  println("Error: " + connection.responseCode);
+  return;
+}
+
+Gson gson = new Gson();
+Distribution dist = gson.fromJson(sb.toString(), Distribution.class);
+println("max:" + dist.max + " min:" + dist.min + " peak:" + dist.peak);
+
+project = Application.getInstance().getProject(); 
+
+try {
+  SessionManager.getInstance().createSession(project, "Try tag update");
+  
+  tri_stereotype = StereotypesHelper.getStereotype(project, "Triangular", null);
+  
+  rate = Finder.byQualifiedName().find(project, "Systems::Lego Sticky Note Detection System (LSNDS)::Lego Sticky Note Detection System::terrainTraversalSuccessRate");
+  
+  TagsHelper.setStereotypePropertyValue(rate, tri_stereotype, "max", dist.max);
+  TagsHelper.setStereotypePropertyValue(rate, tri_stereotype, "min", dist.min);
+  TagsHelper.setStereotypePropertyValue(rate, tri_stereotype, "peak", dist.peak);
+ 
+  SessionManager.getInstance().closeSession(project);
+} catch (Exception e) {
+  Application.getInstance().getGUILog().showMessage("Exception occured: " + e.getMessage());
+  SessionManager.getInstance().cancelSession(project);
+}
+</String></body><TO_DO humanName="To Do" mode="s,e"></TO_DO><ActiveHyperlink humanName="Active Hyperlink"></ActiveHyperlink><report_appliedStereotype_tags humanName="Applied Stereotype" requireSort="element" mode="s,e"/></opaquebehavior></magicdraw>
